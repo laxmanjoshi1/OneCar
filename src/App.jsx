@@ -3,10 +3,12 @@ import HomePage from "./pages/HomePage.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CustomerAuth from "./pages/CustomerAuth.jsx";
+import TrackBooking from "./pages/TrackBooking.jsx";
 export default function App() {
   return <Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/admin/login" element={<AdminLogin />} />
+    <Route path="/track" element={<TrackBooking />} />
     <Route path="/login" element={<CustomerAuth />} />
     <Route path="/register" element={<CustomerAuth />} />
     <Route path="/admin/*" element={<AdminDashboard />} />

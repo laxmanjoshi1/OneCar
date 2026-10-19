@@ -41,7 +41,8 @@ router.post('/', asyncRoute(async (req, res) => {
 
     // Customer: signed-in user, else match/create a guest profile by phone.
     let customer = null;
-    if (req.session?.customer) customer = await Customer.findById(req.session.customer.id);
+    const signedIn = req.customerUser || req.session?.customer;
+    if (signedIn) customer = await Customer.findById(signedIn.id);
     if (!customer) customer = await Customer.findOne({ phone });
     if (customer) {
       if (!customer.password_hash) { customer.full_name = name; }
@@ -82,6 +83,20 @@ router.post('/payment/verify', asyncRoute(async (req, res) => {
   booking.payment_status = 'paid'; booking.razorpay_payment_id = paymentId; booking.paid_at = new Date();
   await booking.save();
   ok(res, { payment_status: 'paid' });
+}));
+
+// Public: a customer checks the status of their own booking. Needs the reference AND the phone number used to book.
+router.get('/track', asyncRoute(async (req, res) => {
+  const reference = text(req.query.reference).toUpperCase(), phone = normalizeIndianPhone(req.query.phone);
+  if (!reference || !phone) return fail(res, 'Enter your booking reference and the mobile number you booked with.', 422);
+  const b = await Booking.findOne({ booking_reference: reference, customer_phone: phone });
+  if (!b) return fail(res, 'No booking found with these details. Check the reference and phone number.', 404);
+  ok(res, {
+    booking_reference: b.booking_reference, status: b.status, status_reason: b.status_reason || null,
+    ride_type: b.ride_type, vehicle_category: b.vehicle_category, pickup_location: b.pickup_location, destination: b.destination,
+    pickup_at: b.pickup_at, total_fare: b.total_fare, payment_method: b.payment_method, payment_status: b.payment_status,
+    vehicle_name: b.vehicle_name || null, vehicle_registration: b.vehicle_registration || null, updated_at: b.updated_at
+  });
 }));
 
 module.exports = router;
