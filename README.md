@@ -14,6 +14,7 @@ Premium cab-booking site for India. The original React/Vite landing page and map
 - **Accept or reject orders.** Accept assigns a free vehicle (auto, or pick one) and locks it for that time slot. Reject needs a reason. Accepted orders can be marked completed or cancelled. Online orders can only be accepted once paid; rejecting/cancelling a paid order flags *Refund due* (refund it from the Razorpay dashboard).
 - **Cars:** add, edit, deactivate and **delete** vehicles (registration no., fuel, seats) and **edit their prices** (base fare and ₹/km). A vehicle with upcoming accepted orders can't be deleted.
 - **Commission:** set your commission % (default 15%). Each accepted order records *expected* commission; completing it makes it *earned*. Reports by period and category, ride-by-ride, plus owner/driver share.
+- **Drivers:** add, edit, deactivate and **delete** drivers (name, phone, licence no., city, notes). Admin-only.
 - Customers list, live pending-order counter (auto-refreshes every 30 s), password change API.
 
 ## Run locally
@@ -66,7 +67,7 @@ customer books ──► pending ──Accept──► confirmed ──Complete�
 ## API summary (`/api`)
 
 Public: `GET /health`, `GET /pricing/config`, `GET /vehicles`, `POST /bookings`, `POST /bookings/payment/verify`, `POST /auth/register|login|logout`, `GET /auth/me`, `GET /auth/bookings`.
-Admin (session): `POST /admin/login|logout`, `GET /admin/me|dashboard|bookings|vehicles|commission|customers`, `POST /admin/bookings/:id/accept|reject|complete|cancel`, `POST|PATCH|DELETE /admin/vehicles[/:id]`, `PATCH /admin/settings`, `POST /admin/password`.
+Admin (session): `POST /admin/login|logout`, `GET /admin/me|dashboard|bookings|vehicles|drivers|commission|customers`, `POST /admin/bookings/:id/accept|reject|complete|cancel`, `POST|PATCH|DELETE /admin/vehicles[/:id]`, `POST|PATCH|DELETE /admin/drivers[/:id]`, `PATCH /admin/settings`, `POST /admin/password`.
 
 ## Before real launch
 

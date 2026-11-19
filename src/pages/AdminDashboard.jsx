@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 
-const sections = [["Overview", "/admin"], ["Orders", "/admin/bookings"], ["Vehicles", "/admin/vehicles"], ["Commission", "/admin/commission"], ["Customers", "/admin/customers"]];
+const sections = [["Overview", "/admin"], ["Orders", "/admin/bookings"], ["Vehicles", "/admin/vehicles"], ["Drivers", "/admin/drivers"], ["Commission", "/admin/commission"], ["Customers", "/admin/customers"]];
 const CATEGORIES = ["Comfort Sedan", "Premium SUV", "Executive Class"];
 const FUELS = ["Petrol", "Diesel", "CNG", "Electric", "Hybrid"];
 
@@ -124,6 +124,42 @@ function Vehicles({ vehicles, refresh }) {
     </tbody></table></div> : <p className="admin-empty">No vehicles yet. Add your first car above — customers cannot book a category with no active vehicle.</p>}</div></section>;
 }
 
+const blankDriver = { full_name: "", phone: "", license_number: "", city: "", notes: "", active: true };
+function Drivers() {
+  const [drivers, setDrivers] = useState([]), [form, setForm] = useState(blankDriver), [editing, setEditing] = useState(null), [message, setMessage] = useState(null), [loaded, setLoaded] = useState(false);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const load = useCallback(() => api("/admin/drivers").then(r => { setDrivers(r.data || []); setLoaded(true); }).catch(e => setMessage({ ok: false, text: e.message })), []);
+  useEffect(() => { load(); }, [load]);
+  async function save(e) {
+    e.preventDefault(); setMessage(null);
+    try {
+      await api(editing ? `/admin/drivers/${editing}` : "/admin/drivers", { method: editing ? "PATCH" : "POST", body: JSON.stringify(form) });
+      setMessage({ ok: true, text: editing ? "Driver updated." : "Driver added." }); setForm(blankDriver); setEditing(null); await load();
+    } catch (err) { setMessage({ ok: false, text: err.message }); }
+  }
+  function edit(d) { setEditing(d.id); setForm({ full_name: d.full_name, phone: d.phone, license_number: d.license_number || "", city: d.city || "", notes: d.notes || "", active: d.active }); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  async function toggle(d) { setMessage(null); try { await api(`/admin/drivers/${d.id}`, { method: "PATCH", body: JSON.stringify({ active: !d.active }) }); await load(); } catch (err) { setMessage({ ok: false, text: err.message }); } }
+  async function remove(d) {
+    if (!window.confirm(`Delete driver ${d.full_name} (${d.phone})? This cannot be undone.`)) return;
+    setMessage(null); try { await api(`/admin/drivers/${d.id}`, { method: "DELETE" }); setMessage({ ok: true, text: "Driver deleted." }); if (editing === d.id) { setEditing(null); setForm(blankDriver); } await load(); } catch (err) { setMessage({ ok: false, text: err.message }); }
+  }
+  return <section><div className="admin-page-heading"><div><p className="admin-eyebrow">DRIVER MANAGEMENT</p><h1>Drivers</h1><p className="admin-muted">Add, edit or delete your drivers. Only administrators can see and change this list.</p></div></div>
+    <Flash m={message} />
+    <div className="admin-panel"><h2>{editing ? "Edit driver" : "Add a driver"}</h2><form className="admin-vehicle-form" onSubmit={save}>
+      <label>Full name<input value={form.full_name} onChange={e => set("full_name", e.target.value)} required minLength={2} maxLength={120} placeholder="e.g. Ramesh Patil" /></label>
+      <label>Mobile number<input value={form.phone} onChange={e => set("phone", e.target.value)} required inputMode="tel" placeholder="98XXXXXXXX or +91…" maxLength={16} /></label>
+      <label>Driving licence no. (optional)<input value={form.license_number} onChange={e => set("license_number", e.target.value.toUpperCase())} maxLength={24} placeholder="MH0220200001234" /></label>
+      <label>City (optional)<input value={form.city} onChange={e => set("city", e.target.value)} maxLength={80} placeholder="Mumbai" /></label>
+      <label>Notes (optional)<input value={form.notes} onChange={e => set("notes", e.target.value)} maxLength={500} placeholder="Anything you want to remember" /></label>
+      <label className="admin-inline-check"><input type="checkbox" checked={Boolean(form.active)} onChange={e => set("active", e.target.checked)} /> Active</label>
+      <div className="admin-form-actions"><button className="admin-primary">{editing ? "Save changes" : "Add driver"}</button>{editing && <button type="button" className="admin-secondary" onClick={() => { setEditing(null); setForm(blankDriver); }}>Cancel edit</button>}</div></form></div>
+    <div className="admin-panel"><h2>Your drivers ({drivers.length})</h2>{drivers.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Name</th><th>Phone</th><th>Licence no.</th><th>City</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      {drivers.map(d => <tr key={d.id}><td><b>{d.full_name}</b>{d.notes && <><br /><small>{d.notes}</small></>}</td><td>{d.phone}</td><td>{d.license_number || "—"}</td><td>{d.city || "—"}</td>
+        <td><span className={`admin-status ${d.active ? "confirmed" : "cancelled"}`}>{d.active ? "Active" : "Inactive"}</span></td>
+        <td><div className="admin-row-actions"><button className="admin-secondary" onClick={() => edit(d)}>Edit</button><button className="admin-secondary" onClick={() => toggle(d)}>{d.active ? "Deactivate" : "Activate"}</button><button className="admin-reject" onClick={() => remove(d)}>Delete</button></div></td></tr>)}
+    </tbody></table></div> : <p className="admin-empty">{loaded ? "No drivers yet. Add your first driver above." : "Loading…"}</p>}</div></section>;
+}
+
 function Commission({ refreshStats }) {
   const [range, setRange] = useState("30d"), [data, setData] = useState(null), [error, setError] = useState(""), [message, setMessage] = useState(null), [percent, setPercent] = useState("");
   const load = useCallback(() => api(`/admin/commission?range=${range}`).then(r => { setData(r.data); setPercent(p => p === "" ? r.data.commission_percent : p); setError(""); }).catch(e => setError(e.message)), [range]);
@@ -180,6 +216,7 @@ export default function AdminDashboard() {
       <Routes><Route index element={<Overview stats={stats} bookings={bookings} vehicles={vehicles} refresh={refreshSafe} />} />
         <Route path="bookings" element={<Bookings bookings={bookings} vehicles={vehicles} refresh={refreshSafe} />} />
         <Route path="vehicles" element={<Vehicles vehicles={vehicles} refresh={refreshSafe} />} />
+        <Route path="drivers" element={<Drivers />} />
         <Route path="commission" element={<Commission refreshStats={refreshSafe} />} />
         <Route path="customers" element={<Customers />} />
         <Route path="*" element={<Navigate to="/admin" replace />} /></Routes></main></div>;

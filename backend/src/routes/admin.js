@@ -6,9 +6,10 @@ const Admin = require('../models/Admin');
 const Booking = require('../models/Booking');
 const Customer = require('../models/Customer');
 const Vehicle = require('../models/Vehicle');
+const Driver = require('../models/Driver');
 const { getCommissionPercent, setCommissionPercent } = require('../models/Setting');
 const { CATEGORIES, splitFare } = require('../lib/fare');
-const { text, validEmail, round2, normalizeRegistration, asyncRoute, withLock } = require('../lib/util');
+const { text, validEmail, round2, normalizeRegistration, normalizeIndianPhone, asyncRoute, withLock } = require('../lib/util');
 const { ok, fail, requireAdmin } = require('../middleware/auth');
 const { cookieOpts } = require('./auth');
 
@@ -185,6 +186,47 @@ router.delete('/vehicles/:id', asyncRoute(async (req, res) => {
   const r = await Vehicle.findByIdAndDelete(req.params.id);
   if (!r) return fail(res, 'Vehicle not found.', 404);
   ok(res, { message: 'Vehicle deleted.' });      // past bookings keep their own vehicle name/registration snapshot
+}));
+
+// ---- Drivers (admin only: every route below router.use(requireAdmin)) -------------
+function readDriver(body, partial = false) {
+  const out = {}, errs = [];
+  if (body.full_name !== undefined || !partial) { const v = text(body.full_name); if (v.length < 2 || v.length > 120) errs.push('name is required (2-120 characters)'); else out.full_name = v; }
+  if (body.phone !== undefined || !partial) { const v = normalizeIndianPhone(body.phone); if (!v) errs.push('enter a valid 10-digit Indian mobile number'); else out.phone = v; }
+  if (body.license_number !== undefined) {
+    const v = text(body.license_number).replace(/\s+/g, '').toUpperCase();
+    if (!v) out.license_number = undefined; else if (!/^[A-Z0-9-]{5,20}$/.test(v)) errs.push('licence number looks invalid (5-20 letters/digits)'); else out.license_number = v;
+  }
+  if (body.city !== undefined) { const v = text(body.city); if (v.length > 80) errs.push('city is too long'); else out.city = v || undefined; }
+  if (body.notes !== undefined) { const v = text(body.notes); if (v.length > 500) errs.push('notes are too long (max 500 characters)'); else out.notes = v || undefined; }
+  if (body.active !== undefined) out.active = Boolean(body.active);
+  return { out, errs };
+}
+const duplicatePhone = res => fail(res, 'A driver with this phone number already exists.', 409);
+
+router.get('/drivers', asyncRoute(async (req, res) => ok(res, await Driver.find().sort({ created_at: -1 }))));
+router.post('/drivers', asyncRoute(async (req, res) => {
+  const { out, errs } = readDriver(req.body || {});
+  if (errs.length) return fail(res, `Invalid driver: ${errs.join('; ')}.`, 422);
+  if (await Driver.exists({ phone: out.phone })) return duplicatePhone(res);
+  try { ok(res, await Driver.create(out), 201); } catch (e) { if (e.code === 11000) return duplicatePhone(res); throw e; }
+}));
+router.patch('/drivers/:id', asyncRoute(async (req, res) => {
+  if (!isId(req.params.id)) return fail(res, 'Invalid driver id.', 422);
+  const { out, errs } = readDriver(req.body || {}, true);
+  if (errs.length) return fail(res, `Invalid driver: ${errs.join('; ')}.`, 422);
+  const d = await Driver.findById(req.params.id);
+  if (!d) return fail(res, 'Driver not found.', 404);
+  if (out.phone && out.phone !== d.phone && await Driver.exists({ phone: out.phone, _id: { $ne: d._id } })) return duplicatePhone(res);
+  d.set(out);
+  try { await d.save(); } catch (e) { if (e.code === 11000) return duplicatePhone(res); throw e; }
+  ok(res, d);
+}));
+router.delete('/drivers/:id', asyncRoute(async (req, res) => {
+  if (!isId(req.params.id)) return fail(res, 'Invalid driver id.', 422);
+  const r = await Driver.findByIdAndDelete(req.params.id);
+  if (!r) return fail(res, 'Driver not found.', 404);
+  ok(res, { message: 'Driver deleted.' });
 }));
 
 // ---- Commission ---------------------------------------------------------------
