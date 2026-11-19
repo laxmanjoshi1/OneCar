@@ -18,7 +18,7 @@ function OrdersTable({ rows, vehicles, onAction, empty = "No orders here yet." }
     {rows.map(r => {
       const options = (vehicles || []).filter(v => v.active && v.category === r.vehicle_category);
       return <tr key={r.id}>
-        <td><b>{r.booking_reference}</b><br /><small>{r.ride_type} · {r.vehicle_category}</small></td>
+        <td><b>{r.booking_reference}</b><br /><small>{r.vehicle_category}</small></td>
         <td>{r.customer_name}<br /><small>{r.customer_phone}</small></td>
         <td style={{ whiteSpace: "normal", minWidth: 220 }}>{r.pickup_location} → {r.destination}<br /><small>{Number(r.distance_km).toFixed(1)} km · {r.duration_minutes} min</small></td>
         <td>{when(r.pickup_at)}</td>
@@ -85,7 +85,7 @@ function Bookings({ bookings, vehicles, refresh }) {
       <OrdersTable rows={filtered} vehicles={vehicles} onAction={act} empty={`No ${tab === "all" ? "" : (STATUS_LABEL[tab] || "").toLowerCase() + " "}orders.`} /></div></section>;
 }
 
-const blankVehicle = { name: "", category: "Comfort Sedan", registration_number: "", fuel_type: "Petrol", passengers: 3, luggage: 2, base_fare: 100, per_km: 40, airport_surcharge: 250, outstation_surcharge: 850, image_url: "", active: true };
+const blankVehicle = { name: "", category: "Comfort Sedan", registration_number: "", fuel_type: "Petrol", passengers: 3, luggage: 2, base_fare: 100, per_km: 40, image_url: "", active: true };
 function Vehicles({ vehicles, refresh }) {
   const [form, setForm] = useState(blankVehicle), [editing, setEditing] = useState(null), [message, setMessage] = useState(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -97,7 +97,7 @@ function Vehicles({ vehicles, refresh }) {
       setMessage({ ok: true, text: editing ? "Vehicle updated." : "Vehicle added." }); setForm(blankVehicle); setEditing(null); await refresh();
     } catch (err) { setMessage({ ok: false, text: err.message }); }
   }
-  function edit(v) { setEditing(v.id); setForm({ name: v.name, category: v.category, registration_number: v.registration_number || "", fuel_type: v.fuel_type || "Petrol", passengers: v.passengers, luggage: v.luggage, base_fare: v.base_fare, per_km: v.per_km, airport_surcharge: v.airport_surcharge, outstation_surcharge: v.outstation_surcharge, image_url: v.image_url || "", active: v.active }); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function edit(v) { setEditing(v.id); setForm({ name: v.name, category: v.category, registration_number: v.registration_number || "", fuel_type: v.fuel_type || "Petrol", passengers: v.passengers, luggage: v.luggage, base_fare: v.base_fare, per_km: v.per_km, image_url: v.image_url || "", active: v.active }); window.scrollTo({ top: 0, behavior: "smooth" }); }
   async function toggle(v) { setMessage(null); try { await api(`/admin/vehicles/${v.id}`, { method: "PATCH", body: JSON.stringify({ active: !v.active }) }); await refresh(); } catch (err) { setMessage({ ok: false, text: err.message }); } }
   async function remove(v) {
     if (!window.confirm(`Delete ${v.name}${v.registration_number ? ` (${v.registration_number})` : ""}? Past orders keep their record. This cannot be undone.`)) return;
@@ -114,13 +114,11 @@ function Vehicles({ vehicles, refresh }) {
       <label>Luggage (bags)<input type="number" min="0" max="30" value={form.luggage} onChange={num("luggage")} required /></label>
       <label>Base fare (₹)<input type="number" min="0" max="100000" step="1" value={form.base_fare} onChange={num("base_fare")} required /></label>
       <label>Rate per km (₹)<input type="number" min="0" max="100000" step="0.5" value={form.per_km} onChange={num("per_km")} required /></label>
-      <label>Airport surcharge (₹)<input type="number" min="0" max="100000" step="1" value={form.airport_surcharge} onChange={num("airport_surcharge")} /></label>
-      <label>Outstation surcharge (₹)<input type="number" min="0" max="100000" step="1" value={form.outstation_surcharge} onChange={num("outstation_surcharge")} /></label>
       <label>Image URL (optional, https)<input type="url" value={form.image_url} onChange={e => set("image_url", e.target.value)} placeholder="https://…" /></label>
       <label className="admin-inline-check"><input type="checkbox" checked={Boolean(form.active)} onChange={e => set("active", e.target.checked)} /> Active for bookings</label>
       <div className="admin-form-actions"><button className="admin-primary">{editing ? "Save changes" : "Add vehicle"}</button>{editing && <button type="button" className="admin-secondary" onClick={() => { setEditing(null); setForm(blankVehicle); }}>Cancel edit</button>}</div></form></div>
-    <div className="admin-panel"><h2>Your fleet ({vehicles.length})</h2>{vehicles.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Vehicle</th><th>Category</th><th>Reg. no.</th><th>Seats</th><th>Base</th><th>Per km</th><th>Airport</th><th>Outstation</th><th>Status</th><th>Actions</th></tr></thead><tbody>
-      {vehicles.map(v => <tr key={v.id}><td><b>{v.name}</b><br /><small>{v.fuel_type}</small></td><td>{v.category}</td><td>{v.registration_number || "—"}</td><td>{v.passengers}</td><td>{inr(v.base_fare)}</td><td>{inr(v.per_km)}</td><td>{inr(v.airport_surcharge)}</td><td>{inr(v.outstation_surcharge)}</td>
+    <div className="admin-panel"><h2>Your fleet ({vehicles.length})</h2>{vehicles.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Vehicle</th><th>Category</th><th>Reg. no.</th><th>Seats</th><th>Base</th><th>Per km</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      {vehicles.map(v => <tr key={v.id}><td><b>{v.name}</b><br /><small>{v.fuel_type}</small></td><td>{v.category}</td><td>{v.registration_number || "—"}</td><td>{v.passengers}</td><td>{inr(v.base_fare)}</td><td>{inr(v.per_km)}</td>
         <td><span className={`admin-status ${v.active ? "confirmed" : "cancelled"}`}>{v.active ? "Active" : "Inactive"}</span></td>
         <td><div className="admin-row-actions"><button className="admin-secondary" onClick={() => edit(v)}>Edit / price</button><button className="admin-secondary" onClick={() => toggle(v)}>{v.active ? "Deactivate" : "Activate"}</button><button className="admin-reject" onClick={() => remove(v)}>Delete</button></div></td></tr>)}
     </tbody></table></div> : <p className="admin-empty">No vehicles yet. Add your first car above — customers cannot book a category with no active vehicle.</p>}</div></section>;

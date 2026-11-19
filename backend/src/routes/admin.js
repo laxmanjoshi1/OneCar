@@ -155,7 +155,7 @@ function readVehicle(body, partial = false) {
     if (!raw) out.registration_number = undefined; else { const v = normalizeRegistration(raw); if (!v) errs.push('registration number looks invalid (e.g. MH02AB1234)'); else out.registration_number = v; }
   }
   num('passengers', 1, 20, true); num('luggage', 0, 30, true);
-  num('base_fare', 0, 100000); num('per_km', 0, 100000); num('airport_surcharge', 0, 100000); num('outstation_surcharge', 0, 100000);
+  num('base_fare', 0, 100000); num('per_km', 0, 100000);
   if (body.image_url !== undefined) { const v = text(body.image_url); if (v && !/^https:\/\//i.test(v)) errs.push('image URL must start with https://'); else out.image_url = v || null; }
   if (body.active !== undefined) out.active = Boolean(body.active);
   return { out, errs };

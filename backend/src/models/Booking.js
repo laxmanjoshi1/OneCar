@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const jsonId = require('./plugins');
-const { CATEGORIES, RIDE_TYPES } = require('../lib/fare');
+const { CATEGORIES } = require('../lib/fare');
 const { Schema } = mongoose;
 
 const schema = new Schema({
@@ -9,7 +9,7 @@ const schema = new Schema({
   // Snapshot of customer details at booking time (what the admin/driver needs to see)
   customer_name: String, customer_phone: String, customer_email: String,
 
-  ride_type: { type: String, enum: RIDE_TYPES, default: 'City ride' },
+  ride_type: { type: String, default: 'City ride' },   // legacy field, kept so older bookings still load
   vehicle_category: { type: String, enum: CATEGORIES, required: true },
   pickup_location: { type: String, required: true, maxlength: 255 },
   destination: { type: String, required: true, maxlength: 255 },

@@ -6,9 +6,9 @@ const mongoose = require('mongoose');
 const Vehicle = require('../src/models/Vehicle');
 
 const fleet = [
-  { name: 'Maruti Suzuki Dzire', category: 'Comfort Sedan', registration_number: 'MH02AB1001', passengers: 3, luggage: 2, fuel_type: 'CNG', base_fare: 100, per_km: 40, airport_surcharge: 250, outstation_surcharge: 850, image_url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=900&q=80' },
-  { name: 'Toyota Innova Crysta', category: 'Premium SUV', registration_number: 'MH02AB1002', passengers: 5, luggage: 4, fuel_type: 'Diesel', base_fare: 180, per_km: 58, airport_surcharge: 300, outstation_surcharge: 1000, image_url: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=900&q=80' },
-  { name: 'Mercedes-Benz E-Class', category: 'Executive Class', registration_number: 'MH02AB1003', passengers: 3, luggage: 2, fuel_type: 'Petrol', base_fare: 300, per_km: 80, airport_surcharge: 350, outstation_surcharge: 1200, image_url: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=900&q=80' }
+  { name: 'Maruti Suzuki Dzire', category: 'Comfort Sedan', registration_number: 'MH02AB1001', passengers: 3, luggage: 2, fuel_type: 'CNG', base_fare: 100, per_km: 40, image_url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=900&q=80' },
+  { name: 'Toyota Innova Crysta', category: 'Premium SUV', registration_number: 'MH02AB1002', passengers: 5, luggage: 4, fuel_type: 'Diesel', base_fare: 180, per_km: 58, image_url: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=900&q=80' },
+  { name: 'Mercedes-Benz E-Class', category: 'Executive Class', registration_number: 'MH02AB1003', passengers: 3, luggage: 2, fuel_type: 'Petrol', base_fare: 300, per_km: 80, image_url: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=900&q=80' }
 ];
 
 (async () => {

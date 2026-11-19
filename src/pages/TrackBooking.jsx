@@ -67,7 +67,7 @@ export default function TrackBooking() {
         <tr><td>Reference</td><td><b>{booking.booking_reference}</b></td></tr>
         <tr><td>Route</td><td>{booking.pickup_location} → {booking.destination}</td></tr>
         <tr><td>Pickup</td><td>{when(booking.pickup_at)}</td></tr>
-        <tr><td>Ride</td><td>{booking.ride_type} · {booking.vehicle_category}</td></tr>
+        <tr><td>Ride</td><td>{booking.vehicle_category}</td></tr>
         {booking.vehicle_name && <tr><td>Vehicle</td><td>{booking.vehicle_name}{booking.vehicle_registration ? ` · ${booking.vehicle_registration}` : ""}</td></tr>}
         <tr><td>Fare</td><td>₹{Number(booking.total_fare).toLocaleString("en-IN")}</td></tr>
         <tr><td>Payment</td><td>{PAY[booking.payment_status] || booking.payment_status}</td></tr>

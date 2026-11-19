@@ -12,8 +12,6 @@ const schema = new mongoose.Schema({
   // Pricing (INR). The customer-facing fare for a category is taken from its cheapest active vehicle.
   base_fare: { type: Number, required: true, min: 0, max: 100000 },
   per_km: { type: Number, required: true, min: 0, max: 100000 },
-  airport_surcharge: { type: Number, default: 0, min: 0, max: 100000 },
-  outstation_surcharge: { type: Number, default: 0, min: 0, max: 100000 },
   active: { type: Boolean, default: true }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 schema.index({ registration_number: 1 }, { unique: true, partialFilterExpression: { registration_number: { $type: 'string' } } });

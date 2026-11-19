@@ -5,11 +5,10 @@ const { calcFare, splitFare, endsAt } = require('../src/lib/fare');
 const { normalizeIndianPhone, normalizeRegistration, parseIST, withLock } = require('../src/lib/util');
 const { verifySignature } = require('../src/lib/razorpay');
 
-test('fare: base + per km + surcharge, rounded up to whole rupees', () => {
-  const rule = { base_fare: 100, per_km: 40, airport_surcharge: 250, outstation_surcharge: 850 };
-  assert.equal(calcFare(rule, 'City ride', 10.2), 508);   // 100 + 408
-  assert.equal(calcFare(rule, 'Airport', 10), 750);
-  assert.equal(calcFare(rule, 'Outstation', 100), 4950);
+test('fare: base + per km, rounded up to whole rupees', () => {
+  const rule = { base_fare: 100, per_km: 40 };
+  assert.equal(calcFare(rule, 10.2), 508);   // 100 + 408
+  assert.equal(calcFare(rule, 10), 500);
 });
 test('commission split', () => {
   assert.deepEqual(splitFare(1000, 15), { commission_rate: 15, commission_amount: 150, driver_earning: 850 });

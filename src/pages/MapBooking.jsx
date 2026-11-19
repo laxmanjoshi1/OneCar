@@ -6,9 +6,9 @@ import "leaflet/dist/leaflet.css";
 
 const MUMBAI = [19.0760, 72.8777];
 const VEHICLES = {
-  "Comfort Sedan": { base: 100, perKm: 40, airport_surcharge: 250, outstation_surcharge: 850, multiplier: 1, seats: 3 },
-  "Premium SUV": { base: 180, perKm: 58, airport_surcharge: 300, outstation_surcharge: 1000, multiplier: 1, seats: 5 },
-  "Executive Class": { base: 300, perKm: 80, airport_surcharge: 350, outstation_surcharge: 1200, multiplier: 1, seats: 3 },
+  "Comfort Sedan": { base: 100, perKm: 40, multiplier: 1, seats: 3 },
+  "Premium SUV": { base: 180, perKm: 58, multiplier: 1, seats: 5 },
+  "Executive Class": { base: 300, perKm: 80, multiplier: 1, seats: 3 },
 };
 const mumbaiParts = (date = new Date()) => Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(date).filter(p => p.type !== "literal").map(p => [p.type, p.value]));
 const dateString = p => `${p.year}-${p.month}-${p.day}`;
@@ -105,15 +105,14 @@ async function payWithRazorpay(booking) {
 }
 
 export default function MapBooking() {
-  const [rideType, setRideType] = useState("City ride");
   const [vehicle, setVehicle] = useState("Comfort Sedan");
   const [pickup, setPickup] = useState({ label: "Bandra, Mumbai, Maharashtra, India", point: [19.0600, 72.8360] });
-  const [destination, setDestination] = useState({ label: "Chhatrapati Shivaji Maharaj International Airport, Mumbai, India", point: [19.0896, 72.8656] });
+  const [destination, setDestination] = useState({ label: "Gateway of India, Mumbai, Maharashtra, India", point: [18.9220, 72.8347] });
   const [route, setRoute] = useState(null);
   const [routeBusy, setRouteBusy] = useState(false);
   const [locationMode, setLocationMode] = useState("pickup");
   const [searchPickup, setSearchPickup] = useState("Bandra, Mumbai, Maharashtra, India");
-  const [searchDestination, setSearchDestination] = useState("Chhatrapati Shivaji Maharaj International Airport, Mumbai, India");
+  const [searchDestination, setSearchDestination] = useState("Gateway of India, Mumbai, Maharashtra, India");
   const [locationError, setLocationError] = useState("");
   const [routeError, setRouteError] = useState("");
   const [date, setDate] = useState(() => dateString(defaultPickup()));
@@ -148,9 +147,8 @@ export default function MapBooking() {
     const base = Number(pricing.base ?? pricing.base_fare ?? 100);
     const perKm = Number(pricing.perKm ?? pricing.per_km ?? 40);
     const multiplier = Number(pricing.multiplier ?? 1);
-    const tripSurcharge = rideType === "Airport" ? Number(pricing.airport_surcharge ?? pricing.airportSurcharge ?? 250) : rideType === "Outstation" ? Number(pricing.outstation_surcharge ?? pricing.outstationSurcharge ?? 850) : 0;
-    return Math.max(0, Math.ceil((base + route.km * perKm + tripSurcharge) * multiplier));
-  }, [route, pricing, rideType]);
+    return Math.max(0, Math.ceil((base + route.km * perKm) * multiplier));
+  }, [route, pricing]);
 
   async function searchLocation(which) {
     const query = which === "pickup" ? searchPickup : searchDestination;
@@ -193,7 +191,7 @@ export default function MapBooking() {
     setBusy(true); setMessage("");
     const payload = {
       customer_name: customer.name.trim(), customer_phone: customer.phone.trim(), customer_email: customer.email.trim() || null,
-      ride_type: rideType, vehicle_category: vehicle, pickup_location: pickup.label, destination: destination.label,
+      vehicle_category: vehicle, pickup_location: pickup.label, destination: destination.label,
       pickup_lat: pickup.point[0], pickup_lng: pickup.point[1], destination_lat: destination.point[0], destination_lng: destination.point[1],
       distance_km: Number(route.km.toFixed(3)), duration_minutes: route.minutes, pickup_date: date, pickup_time: time,
       payment_method: paymentMethod
@@ -217,7 +215,6 @@ export default function MapBooking() {
   return <section className="booking-wrap map-booking-wrap" id="booking"><div className="container">
     <form className="booking map-booking" onSubmit={submitBooking}>
       <div className="booking-top"><div><div className="booking-title">Where would you like to go?</div><div className="sub">Choose real road routes and get a distance-based fare in ₹.</div></div>
-        <div className="tabs">{["City ride","Airport","Outstation"].map(t=><button key={t} type="button" className={`tab ${rideType===t?"active":""}`} onClick={()=>setRideType(t)}>{t}</button>)}</div>
       </div>
       <div className="map-location-grid">
         <div className="field"><label htmlFor="pickup-search">Pickup location</label><div className="map-search-row"><input id="pickup-search" value={searchPickup} onChange={e=>setSearchPickup(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();searchLocation("pickup");}}} placeholder="Search pickup location"/><button type="button" onClick={()=>searchLocation("pickup")}>Find</button></div></div>

@@ -5,14 +5,14 @@ Premium cab-booking site for India. The original React/Vite landing page and map
 ## What it does
 
 **Customers**
-- Book a city / airport / outstation ride on a map (OpenStreetMap + OSRM). The fare is **always recalculated on the server**.
+- Book a ride on a map (OpenStreetMap + OSRM). The fare is **always recalculated on the server**.
 - Indian mobile validation (`98XXXXXXXX`, `+91…`), pickup must be ≥ 30 min away, availability is checked against your fleet.
 - Pay **cash to driver**, or **UPI / card / netbanking via Razorpay** when you add Razorpay keys (signature verified server-side).
 - Optional customer accounts (bcrypt-hashed passwords, HTTP-only session cookies).
 
 **Admin (`/admin/login`)**
 - **Accept or reject orders.** Accept assigns a free vehicle (auto, or pick one) and locks it for that time slot. Reject needs a reason. Accepted orders can be marked completed or cancelled. Online orders can only be accepted once paid; rejecting/cancelling a paid order flags *Refund due* (refund it from the Razorpay dashboard).
-- **Cars:** add, edit, deactivate and **delete** vehicles (registration no., fuel, seats) and **edit their prices** (base fare, ₹/km, airport and outstation surcharges). A vehicle with upcoming accepted orders can't be deleted.
+- **Cars:** add, edit, deactivate and **delete** vehicles (registration no., fuel, seats) and **edit their prices** (base fare and ₹/km). A vehicle with upcoming accepted orders can't be deleted.
 - **Commission:** set your commission % (default 15%). Each accepted order records *expected* commission; completing it makes it *earned*. Reports by period and category, ride-by-ride, plus owner/driver share.
 - Customers list, live pending-order counter (auto-refreshes every 30 s), password change API.
 
